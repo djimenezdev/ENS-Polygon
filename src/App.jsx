@@ -81,6 +81,10 @@ const App = () => {
       // Boom! This should print out public address once we authorize Metamask.
       console.log("Connected", accounts[0]);
       setAddress(accounts[0]);
+       // This is the new part, we check the user's network chain ID
+    const chainId = await ethereum.request({ method: 'eth_chainId' });
+      console.log(chainId)
+    setNetwork(networks[chainId]);
     } catch (error) {
       console.log(error)
     }
@@ -278,7 +282,19 @@ const renderMints = () => {
     if(ethereum){     
     ethereum.on('chainChanged', (chainId) => {
       setNetwork(networks[chainId])
-    })}
+    })
+    ethereum.on('accountsChanged', (accounts) => {
+      if (accounts.length === 0) {
+    // MetaMask is locked or the user has not connected any accounts
+    alert('Successfully Disconnected');
+        setAddress("")
+        setNetwork("")
+        setDomain("")
+        setAllDomains([])
+        
+  } 
+    });
+    }
   }, [])
 
   useEffect(() => {
@@ -309,7 +325,7 @@ const renderMints = () => {
         setAllDomains(domains)
       })()
     }
-  }, [address, transaction])
+  }, [address, transaction, network])
 
   
 
@@ -331,7 +347,7 @@ const renderMints = () => {
 </div>
 
         {/* Add your render method here */}
-        {address.length <= 0 && !spinner && network === "Polygon Mumbai Testnet" ? renderNotConnectedContainer():address.length > 0 && !spinner && network === "Polygon Mumbai Testnet" ? renderInputForm(): spinner && transaction.length === 0 ? renderLoader(): spinner && transaction.length > 0 && network === "Polygon Mumbai Testnet" ? renderPolyScan():renderNetworkSwitch()}
+        {address.length <= 0 && !spinner ? renderNotConnectedContainer():address.length > 0 && !spinner && network === "Polygon Mumbai Testnet" ? renderInputForm(): spinner && transaction.length === 0 ? renderLoader(): spinner && transaction.length > 0 && network === "Polygon Mumbai Testnet" ? renderPolyScan(): network !== "Polygon Mumbai Testnet" && address.length > 0 ? renderNetworkSwitch():null}
         {allDomains && network === "Polygon Mumbai Testnet"  && renderMints()}
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
